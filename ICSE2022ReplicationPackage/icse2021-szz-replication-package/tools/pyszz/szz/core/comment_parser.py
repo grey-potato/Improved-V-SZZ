@@ -36,16 +36,30 @@ def parse_comments_srcml(file_str: str, file_name: str, temp_folder: str = tempf
             temp_file.write(file_str)
 
         process_out = list()
-        p = subprocess.Popen(f'srcml --position {file_name}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            # 使用列表形式避免路径中空格问题
+            p = subprocess.Popen(['srcml', '--position', file_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        except FileNotFoundError:
+            # srcml未安装，跳过注释过滤
+            if os.path.isfile(file_name):
+                os.remove(file_name)
+            return line_comment_ranges
+        
         for line in p.stdout.readlines():
-            process_out.append(line.decode('utf-8').strip())
+            # 使用errors='ignore'来处理无法解码的字符
+            try:
+                decoded_line = line.decode('utf-8').strip()
+            except UnicodeDecodeError:
+                # 尝试使用其他编码或忽略错误
+                decoded_line = line.decode('utf-8', errors='ignore').strip()
+            process_out.append(decoded_line)
         status = p.wait()
 
         if status == 0:
             for line in process_out:
                 if line.strip().startswith("<comment"):
-                    line_comment_ranges.append(CommentRange(start=int(re.search('pos:start="(\d+):', line).groups()[0]),
-                                                            end=int(re.search('pos:end="(\d+):', line).groups()[0])))
+                    line_comment_ranges.append(CommentRange(start=int(re.search(r'pos:start="(\d+):', line).groups()[0]),
+                                                            end=int(re.search(r'pos:end="(\d+):', line).groups()[0])))
         else:
             log.error(process_out)
 

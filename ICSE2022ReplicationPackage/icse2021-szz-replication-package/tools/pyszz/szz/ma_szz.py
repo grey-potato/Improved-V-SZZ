@@ -2,7 +2,7 @@ import logging as log
 from typing import List, Set
 from time import time as ts
 from git import Commit
-from pydriller import RepositoryMining, ModificationType
+from pydriller import Repository as RepositoryMining, ModificationType
 
 from szz.ag_szz import AGSZZ
 from szz.core.abstract_szz import ImpactedFile, DetectLineMoved

@@ -60,7 +60,7 @@ def run_szz(project, commits, method, repo_url=None, max_change_size=DEFAULT_MAX
         my_szz = MySZZ(repo_full_name=project, repo_url=repo_url, repos_dir=REPOS_DIR, use_temp_dir=use_temp_dir, ast_map_path=AST_MAP_PATH)
         for commit in commits:
             print('Fixing Commit:', commit)
-            imp_files = my_szz.get_impacted_files(fix_commit_hash=commit, file_ext_to_parse=['c', 'java', 'cpp', 'h', 'hpp'], only_deleted_lines=True)
+            imp_files = my_szz.get_impacted_files(fix_commit_hash=commit, file_ext_to_parse=['c', 'java', 'cpp', 'h', 'hpp', 'js', 'py'], only_deleted_lines=True)
             bug_introducing_commits = my_szz.find_bic(fix_commit_hash=commit,
                                       impacted_files=imp_files,
                                       ignore_revs_file_path=None)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     project_commits = load_annotated_commits()
     for project in project_commits:
         print("Project:", project)
-        run_szz(project, project_commits[project], 'ma')
+        run_szz(project, project_commits[project], 'my')  # 使用V-SZZ（带AST映射）
 
         break
 

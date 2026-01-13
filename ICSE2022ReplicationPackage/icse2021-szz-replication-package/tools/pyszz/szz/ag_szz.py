@@ -3,7 +3,7 @@ import traceback
 from typing import List, Set
 from time import time as ts
 from git import Commit
-from pydriller import RepositoryMining
+from pydriller import Repository as RepositoryMining
 
 from szz.core.abstract_szz import AbstractSZZ, ImpactedFile
 

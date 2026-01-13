@@ -3,10 +3,7 @@ import traceback
 from typing import List, Set
 
 from git import Commit
-try:
-    from pydriller import RepositoryMining, GitRepository
-except ImportError:
-    from pydriller import RepositoryMining, Repository as GitRepository
+from pydriller import Repository as RepositoryMining, Repository as GitRepository
 
 from szz.core.abstract_szz import AbstractSZZ, ImpactedFile
 

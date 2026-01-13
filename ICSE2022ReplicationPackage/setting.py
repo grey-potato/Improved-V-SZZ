@@ -1,10 +1,13 @@
 import sys
 import os
 
-# config your working folder and the correponding folder
-WORK_DIR = r'c:\Users\lxp\Desktop\V-SZZ-main\ICSE2022ReplicationPackage'
+# 动态获取工作目录（当前文件所在目录）
+WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 
-REPOS_DIR = r'c:\Users\lxp\Desktop\V-SZZ-main\repos'  # 需要创建这个文件夹存放Git仓库
+# 项目根目录（ICSE2022ReplicationPackage的父目录）
+PROJECT_ROOT = os.path.dirname(WORK_DIR)
+
+REPOS_DIR = os.path.join(PROJECT_ROOT, 'repos')  # Git仓库存放目录
 
 DATA_FOLDER = os.path.join(WORK_DIR, 'data')
 

@@ -56,8 +56,9 @@ class AbstractSZZ(ABC):
         self.use_temp_dir = use_temp_dir
 
         if not use_temp_dir:
-            # TODO: update the temp directory
-            self.__temp_dir = '/data1/baolingfeng/ICSE2022ReplicationPackage/temp'
+            # 使用动态路径
+            self.__temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))), 'temp')
+            os.makedirs(self.__temp_dir, exist_ok=True)
 
             repo_dir = os.path.join(repos_dir, repo_full_name)
             self._repository_path = repo_dir
@@ -145,8 +146,94 @@ class AbstractSZZ(ABC):
         """
         impacted_files = list()
 
-        fix_commit = PyDrillerGitRepo(self.repository_path).get_commit(fix_commit_hash)
-        for mod in fix_commit.modifications:
+        # 使用PyDriller获取指定提交
+        fix_commit = None
+        log.info(f"Looking for commit: {fix_commit_hash}")
+        
+        try:
+            # 尝试使用only_commits参数
+            log.info(f"Trying only_commits method...")
+            commits_found = list(PyDrillerGitRepo(self.repository_path).traverse_commits(only_commits=[fix_commit_hash]))
+            log.info(f"Found {len(commits_found)} commits with only_commits")
+            if commits_found:
+                fix_commit = commits_found[0]
+        except TypeError as e:
+            log.info(f"only_commits not supported: {e}, trying manual search...")
+            # 更旧的版本，手动查找（限制遍历数量）
+            count = 0
+            for commit in PyDrillerGitRepo(self.repository_path).traverse_commits():
+                count += 1
+                if commit.hash == fix_commit_hash or commit.hash.startswith(fix_commit_hash):
+                    fix_commit = commit
+                    log.info(f"Found commit after checking {count} commits")
+                    break
+                if count > 10000:  # 避免无限遍历
+                    log.warning(f"Stopped after checking {count} commits")
+                    break
+        except Exception as e:
+            log.error(f"Error traversing commits: {e}")
+        
+        if fix_commit is None:
+            # 最后尝试：直接使用GitPython访问
+            log.info("Trying GitPython fallback...")
+            try:
+                from git import Repo as GitRepo
+                git_repo = GitRepo(self.repository_path)
+                git_commit = git_repo.commit(fix_commit_hash)
+                
+                # 手动构建一个类似PyDriller的提交对象
+                # 直接使用git diff获取修改的文件
+                log.info("Using GitPython to get modified files")
+                
+                # 获取父提交
+                if git_commit.parents:
+                    parent = git_commit.parents[0]
+                    diffs = parent.diff(git_commit, create_patch=True)
+                    
+                    for diff in diffs:
+                        # 跳过新增文件
+                        if not diff.a_path:
+                            continue
+                        
+                        # 过滤文件扩展名
+                        if file_ext_to_parse:
+                            ext = diff.a_path.split('.')
+                            if len(ext) < 2 or (len(ext) > 1 and ext[1] not in file_ext_to_parse):
+                                continue
+                        
+                        # 获取删除的行号
+                        deleted_lines = []
+                        if diff.diff:
+                            try:
+                                patch_text = diff.diff.decode('utf-8', errors='ignore')
+                                current_line = 0
+                                for line in patch_text.split('\n'):
+                                    if line.startswith('@@'):
+                                        # 解析 @@ -start,count +start,count @@
+                                        parts = line.split('@@')[1].strip().split()
+                                        if parts[0].startswith('-'):
+                                            current_line = int(parts[0].split(',')[0][1:])
+                                    elif line.startswith('-') and not line.startswith('---'):
+                                        deleted_lines.append(current_line)
+                                        current_line += 1
+                                    elif not line.startswith('+'):
+                                        current_line += 1
+                            except:
+                                pass
+                        
+                        if deleted_lines or not only_deleted_lines:
+                            impacted_file = ImpactedFile(diff.a_path, deleted_lines if deleted_lines else [])
+                            impacted_files.append(impacted_file)
+                    
+                    log.info(f"GitPython fallback: found {len(impacted_files)} impacted files")
+                    return impacted_files
+                    
+            except Exception as e:
+                log.error(f"GitPython fallback failed: {e}")
+            
+            raise ValueError(f"Commit {fix_commit_hash} not found in repository")
+        
+        for mod in fix_commit.modified_files:
             # skip newly added files
             if not mod.old_path:
                 continue

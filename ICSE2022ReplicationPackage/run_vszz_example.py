@@ -8,9 +8,16 @@ import os
 import sys
 import json
 
+# 确保可以导入当前目录的模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
 from setting import *
 
-sys.path.append(os.path.join(SZZ_FOLDER, 'tools/pyszz/'))
+# 添加pyszz到路径
+pyszz_path = os.path.join(SZZ_FOLDER, 'tools', 'pyszz')
+if os.path.exists(pyszz_path) and pyszz_path not in sys.path:
+    sys.path.insert(0, pyszz_path)
 
 from szz.my_szz import MySZZ
 from data_loader import load_annotated_commits
@@ -46,6 +53,23 @@ def run_vszz_example():
         return
     
     print(f"\n✓ 仓库已存在: {repo_path}")
+    
+    # 验证提交是否存在
+    print("\n验证提交...")
+    from git import Repo as GitRepo
+    git_repo = GitRepo(repo_path)
+    
+    commit_to_check = first_commits[0]
+    try:
+        git_commit = git_repo.commit(commit_to_check)
+        print(f"✓ 提交存在于Git仓库: {commit_to_check[:8]}")
+        print(f"  提交时间: {git_commit.committed_datetime}")
+        print(f"  作者: {git_commit.author.name}")
+        print(f"  消息: {git_commit.message.split(chr(10))[0][:50]}...")
+    except Exception as e:
+        print(f"✗ 提交不存在于Git仓库: {e}")
+        print(f"  可能需要 git fetch --all 获取所有分支")
+        return
     
     # 创建V-SZZ实例
     print("\n初始化V-SZZ...")

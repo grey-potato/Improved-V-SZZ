@@ -109,7 +109,6 @@ class MySZZ(AbstractSZZ):
         return bug_introd_commits
 
     def map_modified_line_java(self, blame_entry, blame_file_path):
-        mapping_cmd = "java -jar ASTMapEval.jar -p {project} -c {commit_id} -o {output} -f {file_path}"
         ast_map_temp = os.path.join(self.ast_map_path, 'temp')
 
         commit_id = blame_entry.commit.hexsha
@@ -119,25 +118,36 @@ class MySZZ(AbstractSZZ):
 
         mapping_db = None
         mapping_db_file = os.path.join(ast_map_temp, "{project}.json".format(project=self.repo_full_name))
+        output_path = os.path.join(ast_map_temp, "tmp.json")
+        
+        # 构建命令参数列表（避免shell=True和引号问题）
+        mapping_cmd = [
+            "java", "-jar", "ASTMapEval.jar",
+            "-p", self.repo_full_name,
+            "-c", commit_id,
+            "-o", output_path,
+            "-f", file_path
+        ]
+        
         if os.path.exists(mapping_db_file):
             mapping_db = json.load(open(mapping_db_file))
             if commit_id not in mapping_db:
-                subprocess.check_output(mapping_cmd.format(project=self.repo_full_name, commit_id=commit_id, output=os.path.join(ast_map_temp, "tmp.json"), file_path=file_path), cwd=self.ast_map_path, shell=True).decode('utf-8', errors='ignore')
+                subprocess.check_output(mapping_cmd, cwd=self.ast_map_path, stderr=subprocess.DEVNULL).decode('utf-8', errors='ignore')
 
-                mapping_results = json.load(open(os.path.join(ast_map_temp, "tmp.json")))
+                mapping_results = json.load(open(output_path))
                 mapping_db[commit_id] = {}
                 mapping_db[commit_id][file_path] = mapping_results
             elif file_path not in mapping_db[commit_id]:
-                subprocess.check_output(mapping_cmd.format(project=self.repo_full_name, commit_id=commit_id, output=os.path.join(ast_map_temp, "tmp.json"), file_path=file_path), cwd=self.ast_map_path, shell=True).decode('utf-8', errors='ignore')
+                subprocess.check_output(mapping_cmd, cwd=self.ast_map_path, stderr=subprocess.DEVNULL).decode('utf-8', errors='ignore')
 
-                mapping_results = json.load(open(os.path.join(ast_map_temp, "tmp.json")))
+                mapping_results = json.load(open(output_path))
                 mapping_db[commit_id][file_path] = mapping_results
             else:
                 mapping_results = mapping_db[commit_id][file_path]
         else:
-            subprocess.check_output(mapping_cmd.format(project=self.repo_full_name, commit_id=commit_id, output=os.path.join(ast_map_temp, "tmp.json"), file_path=file_path), cwd=self.ast_map_path, shell=True).decode('utf-8', errors='ignore')
+            subprocess.check_output(mapping_cmd, cwd=self.ast_map_path, stderr=subprocess.DEVNULL).decode('utf-8', errors='ignore')
 
-            mapping_results = json.load(open(os.path.join(ast_map_temp, "tmp.json")))
+            mapping_results = json.load(open(output_path))
             mapping_db = {}
             mapping_db[commit_id] = {}
             mapping_db[commit_id][file_path] = mapping_results
@@ -148,11 +158,13 @@ class MySZZ(AbstractSZZ):
         target_file = None
         target_stmt = None
         for result in mapping_results:
-            if file_path == result['src']:
-                target_file = result['dst']
-                      
+            # JSON使用'dst'和'src'字段，而不是'targetFile'
+            result_file = result.get('dst') or result.get('targetFile', '')
+            if result_file == file_path:
+                target_file = result
                 for stmt in result['stmt']:
-                    if 'dstStmtStartLine' in stmt and stmt['dstStmtStartLine'] == int(line_num):
+                    # 只检查srcStmtStartLine是否匹配（AST输出没有srcStmtEndLine）
+                    if stmt['srcStmtStartLine'] == line_num:
                         target_stmt = stmt
                         break
                 
@@ -172,10 +184,25 @@ class MySZZ(AbstractSZZ):
 
     def map_modified_line(self, blame_entry, blame_file_path):
         #TODO: rename type 
-        blame_commit = PyDrillerGitRepo(self.repository_path).get_commit(blame_entry.commit.hexsha)
+        # 使用PyDriller获取指定提交
+        blame_commit = None
+        try:
+            # 新版PyDriller使用only_commits参数
+            for commit in PyDrillerGitRepo(self.repository_path).traverse_commits(only_commits=[blame_entry.commit.hexsha]):
+                blame_commit = commit
+                break
+        except TypeError:
+            # 更旧的版本可能不支持only_commits，直接遍历
+            for commit in PyDrillerGitRepo(self.repository_path).traverse_commits():
+                if commit.hash == blame_entry.commit.hexsha or commit.hash.startswith(blame_entry.commit.hexsha):
+                    blame_commit = commit
+                    break
+        
+        if blame_commit is None:
+            return -1
         # print('get blame commit', blame_commit, blame_entry.commit.hexsha)
 
-        for mod in blame_commit.modifications:
+        for mod in blame_commit.modified_files:
             file_path = mod.new_path
             if mod.change_type == ModificationType.DELETE or mod.change_type == ModificationType.RENAME:
                 file_path = mod.old_path
