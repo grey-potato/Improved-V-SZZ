@@ -1,0 +1,99 @@
+{
+    "729c4731574ffffaf58ebefdbaeb3bd19ed1c7b7": [
+        {
+            "line_num": 63,
+            "line_str": "String guarded = filename.replace(\":\", \"_\").replace(\"\\\\\", \"\").replace(\"/\", \"\");",
+            "file_path": "activemq-fileserver/src/main/java/org/apache/activemq/util/FilenameGuardFilter.java",
+            "previous_commits": [
+                [
+                    "9fd5cb7dfe0fcc431f99d5e14206e0090e72f36b",
+                    63,
+                    "String guarded = filename.replace(\":\", \"_\").replace(\"\\\\\", \"\").replace(\"/\", \"\");",
+                    "Update"
+                ],
+                [
+                    "540dd5c987855fc6b0981ece021358645ae07827",
+                    59,
+                    "String guarded = filename.replace(\":\", \"_\");",
+                    "New File"
+                ]
+            ]
+        }
+    ],
+    "9fd5cb7dfe0fcc431f99d5e14206e0090e72f36b": [
+        {
+            "line_num": 59,
+            "line_str": "String guarded = filename.replace(\":\", \"_\");",
+            "file_path": "activemq-fileserver/src/main/java/org/apache/activemq/util/FilenameGuardFilter.java",
+            "previous_commits": [
+                [
+                    "540dd5c987855fc6b0981ece021358645ae07827",
+                    59,
+                    "String guarded = filename.replace(\":\", \"_\");",
+                    "New File"
+                ]
+            ]
+        }
+    ],
+    "51eb87a84be88d28383ea48f6e341ffe1203c5ba": [
+        {
+            "line_num": 25,
+            "line_str": "$(\"#messages\").append(\"<p>\" + message.body + \"</p>\\n\");",
+            "file_path": "activemq-web-demo/src/main/webapp/websocket/chat.js",
+            "previous_commits": [
+                [
+                    "e72f43f8e6f23a29112a6e85dc44d707eeb4e547",
+                    25,
+                    "$(\"#messages\").append(\"<p>\" + message.body + \"</p>\\n\");"
+                ]
+            ]
+        },
+        {
+            "line_num": 15,
+            "line_str": "$(\"#debug\").append(str + \"\\n\");",
+            "file_path": "activemq-web-demo/src/main/webapp/websocket/chat.js",
+            "previous_commits": [
+                [
+                    "e72f43f8e6f23a29112a6e85dc44d707eeb4e547",
+                    15,
+                    "$(\"#debug\").append(str + \"\\n\");"
+                ]
+            ]
+        },
+        {
+            "line_num": 73,
+            "line_str": "out.println(\"<body>Published <b>\" + count + \"</b> of \" + total + \" price messages.  Refresh = \" + refreshRate + \"s\");",
+            "file_path": "activemq-web/src/main/java/org/apache/activemq/web/PortfolioPublishServlet.java",
+            "previous_commits": [
+                [
+                    "540dd5c987855fc6b0981ece021358645ae07827",
+                    73,
+                    "out.println(\"<body>Published <b>\" + count + \"</b> of \" + total + \" price messages.  Refresh = \" + refreshRate + \"s\");",
+                    "No Edit"
+                ],
+                [
+                    "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+                    74,
+                    "refreshRate = \"1\";",
+                    "New File"
+                ]
+            ]
+        }
+    ],
+    "fafd12dfd4f71336f8e32c090d40ed1445959b40": [
+        {
+            "line_num": 76,
+            "line_str": "out.print(refreshRate);",
+            "file_path": "activemq-web/src/java/org/activemq/web/PortfolioPublishServlet.java",
+            "previous_commits": [
+                [
+                    "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+                    76,
+                    "out.print(refreshRate);",
+                    "New File"
+                ]
+            ]
+        }
+    ],
+    "00921f22ff9a8792d7663ef8fadd4823402a6324": []
+}
