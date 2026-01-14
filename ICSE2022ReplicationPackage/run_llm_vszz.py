@@ -32,7 +32,7 @@ def main():
   python run_llm_vszz.py /path/to/repo abc123 --api-key sk-xxx
   
   # 使用自定义模型
-  python run_llm_vszz.py /path/to/repo abc123 --large-model gpt-4-turbo --small-model gpt-3.5-turbo
+  python run_llm_vszz.py /path/to/repo abc123 --large-model gpt-5.2 --small-model gpt-4.1-mini
   
   # 禁用缓存
   python run_llm_vszz.py /path/to/repo abc123 --no-cache
@@ -44,8 +44,8 @@ def main():
   4. 小LLM验证最终结果
 
 环境变量:
-  OPENAI_API_KEY: OpenAI API密钥
-  OPENAI_BASE_URL: API基础URL（用于兼容其他服务）
+  OPENAI_API_KEY: API密钥 (云雾API或OpenAI)
+  OPENAI_BASE_URL: API基础URL (默认使用云雾API: https://yunwu.ai/v1)
         """
     )
     
@@ -53,12 +53,13 @@ def main():
     parser.add_argument('fix_commit', help='修复提交的哈希值')
     
     parser.add_argument('--api-key', help='OpenAI API密钥 (或设置环境变量 OPENAI_API_KEY)')
-    parser.add_argument('--base-url', help='API基础URL (用于兼容其他OpenAI兼容服务)')
+    parser.add_argument('--base-url', default='https://yunwu.ai/v1',
+                       help='API基础URL (默认: https://yunwu.ai/v1)')
     
-    parser.add_argument('--large-model', default='gpt-4',
-                       help='大模型名称，用于追踪决策 (默认: gpt-4)')
-    parser.add_argument('--small-model', default='gpt-3.5-turbo',
-                       help='小模型名称，用于结果验证 (默认: gpt-3.5-turbo)')
+    parser.add_argument('--large-model', default='gpt-5.1-codex',
+                       help='大模型名称，用于追踪决策 (默认: gpt-5.1-codex)')
+    parser.add_argument('--small-model', default='gpt-5-mini',
+                       help='小模型名称，用于结果验证 (默认: gpt-5-mini)')
     
     # 混合模式相关参数
     parser.add_argument('--pure-llm', action='store_true',
@@ -93,8 +94,10 @@ def main():
         print("   请使用 --api-key 参数或设置 OPENAI_API_KEY 环境变量")
         sys.exit(1)
     
-    # 获取base_url
-    base_url = args.base_url or os.environ.get('OPENAI_BASE_URL')
+    # 获取base_url（默认使用云雾API）
+    base_url = args.base_url
+    if base_url is None:
+        base_url = os.environ.get('OPENAI_BASE_URL', 'https://yunwu.ai/v1')
     
     # 确定是否使用混合模式
     use_hybrid = not args.pure_llm

@@ -1196,10 +1196,10 @@ class LLMEnhancedVSZZ(AbstractSZZ):
 # ============================================================================
 
 def create_llm_enhanced_vszz(repo_path: str,
-                              large_model: str = "gpt-4",
-                              small_model: str = "gpt-3.5-turbo",
+                              large_model: str = "gpt-5.1-codex",
+                              small_model: str = "gpt-5-mini",
                               api_key: str = None,
-                              base_url: str = None,
+                              base_url: str = "https://yunwu.ai/v1",
                               enable_cache: bool = True,
                               use_hybrid: bool = True,
                               ast_map_path: str = None) -> LLMEnhancedVSZZ:
@@ -1245,8 +1245,8 @@ def create_llm_enhanced_vszz(repo_path: str,
 
 def analyze_fix_commit(repo_path: str, fix_commit_hash: str,
                        api_key: str = None,
-                       large_model: str = "gpt-4",
-                       small_model: str = "gpt-3.5-turbo",
+                       large_model: str = "gpt-5.1-codex",
+                       small_model: str = "gpt-5-mini",
                        use_hybrid: bool = True,
                        ast_map_path: str = None) -> List[TrackingResult]:
     """
