@@ -187,12 +187,12 @@ class LLMDrivenSZZ:
     """
     
     def __init__(self, repo_path: str, enable_validation: bool = True,
-                 max_history_depth: int = 50):
+                 max_history_depth: int = 0):
         """
         Args:
             repo_path: Git 仓库路径
             enable_validation: 是否启用小模型验证
-            max_history_depth: 最大追踪深度
+            max_history_depth: 最大追踪深度 (0 表示无限制)
         """
         self.repo = Repo(repo_path)
         self.repo_path = repo_path
@@ -279,7 +279,10 @@ class LLMDrivenSZZ:
             
             if output:
                 commits = output.strip().split('\n')
-                return commits[:self.max_history_depth]
+                # 0 表示无限制
+                if self.max_history_depth > 0:
+                    return commits[:self.max_history_depth]
+                return commits
             return []
         except Exception as e:
             print(f"⚠️ 获取历史失败: {e}")
@@ -308,7 +311,9 @@ class LLMDrivenSZZ:
                 output = self.repo.git.log(*cmd_args)
                 
                 if output:
-                    for line in output.strip().split('\n')[:10]:  # 最多10个结果
+                    # 如果设置了深度限制，应用到搜索结果；否则最多100个
+                    max_results = self.max_history_depth if self.max_history_depth > 0 else 100
+                    for line in output.strip().split('\n')[:max_results]:
                         parts = line.split('|', 2)
                         if len(parts) >= 2:
                             results.append({

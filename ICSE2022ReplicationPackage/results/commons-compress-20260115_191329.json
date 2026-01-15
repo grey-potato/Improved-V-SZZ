@@ -1,0 +1,224 @@
+[
+  {
+    "cve": "CVE-2018-11771",
+    "cwe": "CWE-835",
+    "fix_commit": "a41ce6892cb0590b2e658704434ac0dbcb6834c8",
+    "file_path": "src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java",
+    "line_num": "528",
+    "expected_vic": "008ca948dadacea8d1a2662c577fdcb25f32d5e2",
+    "found_vic": "0646aa7d4d0ece484e26e8ab262265cc9263c350",
+    "is_correct": false,
+    "llm_calls": 5,
+    "validation_calls": 1,
+    "tracked_commits": [
+      {
+        "hash": "22b0d0629267b88749f78412caea672d6539a5b6",
+        "message": "whitespace",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.18,
+          "reasoning": "The current commit only adjusts indentation/whitespace around control-flow statements and does not touch the vulnerability-related line `return -1;`. Since no functional changes are introduced and the problematic code line isn’t affected, this commit cannot be the introduction point.",
+          "evidence": "Diff shows only indentation changes within the `if` block around signatures, without additions or deletions of functional code (no new `return -1;`).",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "af6fe141036d30bfd1613758b7a9fb413bf2bafc",
+        "message": "COMPRESS-455 handle APK Signing Block",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.53,
+          "reasoning": "The diff in commit af6fe141036d only introduces handling for APK signing blocks and refactors readFully helpers. It does not contain or modify the vulnerable `return -1;` logic described in the fix. Therefore this commit is not the introduction point of the vulnerability and we must inspect earlier commits.",
+          "evidence": "No lines in the shown diff include `return -1;`; added code concerns APK signing block detection and readFully overloads.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "c2ace88644826c227191ca52c8d4372a13605e50",
+        "message": "COMPRESS-454 search for STORED data descriptor stopped too soon",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.32,
+          "reasoning": "The shown diff only adjusts the loop bound in the search for data descriptors and does not touch the vulnerable `return -1;` path. Since the target line is neither added nor modified here, this commit cannot be the point where the vulnerable code was first introduced.",
+          "evidence": "Diff change: `for (int i = 0; !done && i < lastRead - 4; i++)` → `for (int i = 0; !done && i < offset + lastRead - 4; i++)`. No `return -1;` appears.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "be86c6236d4cbea207f3a4924687a0bbd99af360",
+        "message": "COMPRESS-445 fix stats for Stored entries in ZipArchiveInputStream",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.38,
+          "reasoning": "The diff in commit be86c6236d changes the value returned in getCompressedCount for stored entries (bytesReadFromStream → bytesRead). There is no appearance or modification of the vulnerable `return -1;` logic, so this commit is not related to the vulnerability and cannot be its introduction point. Earlier commits must be examined.",
+          "evidence": "Diff shows only `return current.bytesReadFromStream;` replaced by `return current.bytesRead;`.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "0646aa7d4d0ece484e26e8ab262265cc9263c350",
+        "message": "COMPRESS-445 try to get compressed count for all supported methods",
+        "analysis": {
+          "is_vulnerability_related": true,
+          "is_introduction_point": true,
+          "should_continue_tracking": false,
+          "confidence": 0.64,
+          "reasoning": "The vulnerable behavior (returning -1 from ZipArchiveInputStream.getCompressedCount when encountering an unsupported compression method, which later led to CVE-2018-11771) is introduced in this commit. Prior to 0646aa7d4d0e, the method always returned either the inflater byte count or current.bytesReadFromStream and never produced -1. This commit adds the final else branch that returns -1, marking the first time the problematic code was written.",
+          "evidence": "Diff hunk at lines ~480-500 shows the addition of multiple method-specific branches ending with the new default case `} else { return -1; }`, which did not exist in the parent revision."
+        }
+      }
+    ]
+  },
+  {
+    "cve": "CVE-2018-1324",
+    "cwe": "CWE-835",
+    "fix_commit": "2a2f1dc48e22a34ddb72321a4db211da91aa933b",
+    "file_path": "src/main/java/org/apache/commons/compress/archivers/zip/X0017_StrongEncryptionHeader.java",
+    "line_num": "313",
+    "expected_vic": "a433f625f89c1d464b05186411ff20802e292fb4",
+    "found_vic": "a433f625f89c1d464b05186411ff20802e292fb4",
+    "is_correct": true,
+    "llm_calls": 15,
+    "validation_calls": 2,
+    "tracked_commits": [
+      {
+        "hash": "3f2c760a4eb82d880e62a03cb9450d9dcf2793f7",
+        "message": "Add final modifier to local variables.",
+        "analysis": {
+          "is_vulnerability_related": true,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.63,
+          "reasoning": "The diff merely adds final modifiers to existing local variables in parseFileFormat; the vulnerable loop already exists, so the code must have been introduced earlier.",
+          "evidence": "Diff shows only changes like `int ivSize` -> `final int ivSize`, indicating the loop was present in previous commit.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "478bef366f84544eb4ac89553eeb7d57680fc521",
+        "message": "Add final modifier to method parameters.",
+        "analysis": {
+          "is_vulnerability_related": true,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.11,
+          "reasoning": "The modified lines merely add final modifiers to existing parameters. The vulnerable loop (`for (int i = 0; i < this.rcount; i++)`) already existed prior to this commit, so this change cannot be the first introduction of the bug.",
+          "evidence": "Diff shows only signature changes (`parseCentralDirectoryFormat`, `parseFileFormat`, etc.), no new loop or logic.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "ff0d651478eaa36358185e2f7552145e657e111b",
+        "message": "TODO",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.52,
+          "reasoning": "This commit only adds TODO comments to several fields and does not touch the loop or logic connected to the infinite-loop vulnerability. Therefore it cannot be the point where the problematic loop was first written.",
+          "evidence": "Diff adds inline comments such as `// TODO written but not read` on existing fields without introducing or modifying the loop containing `for (int i = 0; i < this.rcount; i++) {`.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "4bb50e3ab552c21f724926306806530b4ae96122",
+        "message": "SVNUID not needed; class does not implement Serializable",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.21,
+          "reasoning": "The diff for commit 4bb50e3ab552 only removes a serialVersionUID field and does not touch the loop `for (int i = 0; i < this.rcount; i++)` or any logic related to the CVE-2018-1324 issue. Therefore, this commit is not related to the vulnerable code and cannot be its introduction point.",
+          "evidence": "Diff shows only deletion of `private static final long serialVersionUID = 1L;`.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "9045ef9367f390434eb7b4b0e16a92413ef6c304",
+        "message": "Remove redundant superinterface.",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.12,
+          "reasoning": "该提交仅移除了类的冗余接口实现，与包含漏洞的 for 循环无关，因此不是漏洞引入点，需要继续追踪更早的提交。",
+          "evidence": "diff 只显示从类定义中删除了 ZipExtraField 接口，没有涉及漏洞相关的 for (int i = 0; i < this.rcount; i++) 代码。",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "bee261259c7f342b50cafcf7c6cb7da0dd02737b",
+        "message": "reduce code duplication",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.18,
+          "reasoning": "The diff in commit bee261259c removes duplicated data-handling code and delegates to the superclass, but it does not introduce or modify the vulnerable for-loop (`for (int i = 0; i < this.rcount; i++)`). Since the vulnerable code line is unchanged, it must predate this commit and we need to examine earlier history.",
+          "evidence": "The shown diff removes getter/setter logic and leverages superclass parsing. No additions or modifications to the loop `for (int i = 0; i < this.rcount; i++)` appear in this commit.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "b36f7c929886b2159a6f57df6490ca6b1669de43",
+        "message": "unused code",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.37,
+          "reasoning": "This commit only removes an unused variable (size) and does not touch the looping construct implicated in the infinite-loop vulnerability. Therefore it cannot be the introducing change.",
+          "evidence": "Diff shows deletion of the local variable declaration `long size = ZipLong.getValue(...)` with no modifications to the `for (int i = 0; i < this.rcount; i++) {` code.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "76b0184c7714cd5f580860daeb70c3a3808eb5f2",
+        "message": "silence Java8's javadoc, add a few @since tags",
+        "analysis": {
+          "is_vulnerability_related": false,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.39,
+          "reasoning": "This commit only adjusts Javadoc comments and adds @since tags. The vulnerable loop or related logic is not modified, so this change is unrelated to the vulnerability introduction.",
+          "evidence": "Diff shows only documentation/comment updates (e.g., adding <p> tags, updating @return descriptions). No executable code involving the for-loop or rcount parsing was added or changed.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "745c0a4c0773c75e1b5322b322cc97a7e1a303f6",
+        "message": "whitespace",
+        "analysis": {
+          "is_vulnerability_related": true,
+          "is_introduction_point": false,
+          "should_continue_tracking": true,
+          "confidence": 0.35,
+          "reasoning": "This commit only adjusts whitespace within comment blocks and does not modify executable code. The vulnerable loop is unaffected, so its origin must predate this formatting change.",
+          "evidence": "Diff shows only comment whitespace changes (e.g., replacing \" * RCount    4 bytes  Number of recipients. \" with the same text minus trailing spaces). No code additions or deletions occur.",
+          "next_action": "continue"
+        }
+      },
+      {
+        "hash": "a433f625f89c1d464b05186411ff20802e292fb4",
+        "message": "Added headers to recognize PKWARE crypto headers.",
+        "analysis": {
+          "is_vulnerability_related": true,
+          "is_introduction_point": true,
+          "should_continue_tracking": false,
+          "confidence": 0.72,
+          "reasoning": "This commit adds the file X0017_StrongEncryptionHeader.java for the first time, and the vulnerable loop (`for (int i = 0; i < this.rcount; i++)`) is introduced as part of this entirely new implementation. Since the file did not exist in the parent commit, the loop was first hand-written here, making this commit the true introduction point of the CWE-835 vulnerability later fixed by 2a2f1dc48e22.",
+          "evidence": "In the diff, the file is created from scratch (`new file mode 100644`), and within the new content appears the vulnerable loop `for (int i = 0; i < this.rcount; i++) { ... }`.",
+          "next_action": "stop"
+        }
+      }
+    ]
+  }
+]
