@@ -1,0 +1,455 @@
+{
+  "test_time": "2026-01-15T17:23:07.917269",
+  "repo": "activemq",
+  "accuracy": "3/4",
+  "accuracy_percent": 75.0,
+  "total_llm_calls": 52,
+  "total_validation_calls": 3,
+  "results": [
+    {
+      "cve": "CVE-2015-1830",
+      "cwe": "CWE-22",
+      "expected_vic": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+      "found_vic": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+      "is_correct": true,
+      "llm_calls": 6,
+      "validation_calls": 1,
+      "tracked_commits": 6,
+      "details": {
+        "introduction_commit": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+        "fix_commit": "729c4731574ffffaf58ebefdbaeb3bd19ed1c7b7",
+        "file_path": "activemq-fileserver/src/main/java/org/apache/activemq/util/FilenameGuardFilter.java",
+        "vulnerable_line": "String guarded = filename.replace(\":\", \"_\").replace(\"\\\\\", \"\").replace(\"/\", \"\");",
+        "tracked_commits": [
+          {
+            "hash": "9fd5cb7dfe0fcc431f99d5e14206e0090e72f36b",
+            "message": "https://issues.apache.org/jira/browse/AMQ-5754 - disable file server by default",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.14,
+              "reasoning": "The diff shows the vulnerable guard() method already existed and this commit merely extends the replacement logic. Therefore, the vulnerable code predates this commit and we must inspect earlier history.",
+              "evidence": "Parent version already contained `String guarded = filename.replace(\":\", \"_\");`, demonstrating prior existence of the vulnerable logic.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "8bf987b134bd827b93ed8157b323bc3bd2d8a82e",
+            "message": "https://issues.apache.org/jira/browse/AMQ-3177 - use slf4j instead of jcl\n\ngit-svn-id: https://svn.a",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.47,
+              "reasoning": "This commit only switches the logging framework (Log -> Logger) without touching the guard() method. The vulnerable filename sanitization (single replace on colon) already existed before this change, so the vulnerability must have been introduced in an earlier commit.",
+              "evidence": "Diff shows only replacements of Log/LogFactory with Logger/LoggerFactory; guard() still contains the pre-existing line `String guarded = filename.replace(\":\", \"_\");` inherited from the parent commit.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "47b09a2a8995280fdda93f5c106abd2189617113",
+            "message": "https://issues.apache.org/activemq/browse/AMQ-2600 - jetty 7 - fileserver app fixed\n\ngit-svn-id: htt",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.39,
+              "reasoning": "The commit only switches the logging framework (Jetty Log to commons logging) while the vulnerable guard logic `filename.replace(\":\", \"_\")` already existed in the parent revision. This demonstrates the vulnerable code predates this commit.",
+              "evidence": "Diff shows unchanged `String guarded = filename.replace(\":\", \"_\");` line with only logging statements modified.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "e8a06c43bbe640569b7f2d641ccb934908112d2b",
+            "message": "https://issues.apache.org/activemq/browse/AMQ-2600 - jetty 7 initial commit - web console working, n",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.38,
+              "reasoning": "此提交仅将日志类从 org.mortbay.log.Log 替换为 org.eclipse.jetty.util.log.Log，漏洞相关的 guard 方法和 replace 逻辑在父提交中已经存在，因此该提交并未首次引入漏洞代码，需要继续追踪更早的提交。",
+              "evidence": "diff 中唯一的修改是 import 语句，guard 方法中的字符串替换代码未发生变化。",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "540dd5c987855fc6b0981ece021358645ae07827",
+            "message": "Last set of checkstyle violation fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.49,
+              "reasoning": "The commit only applies style/license cleanups; the guard(String) logic already existed in the parent revision (same replace(\":\", \"_\") call). Therefore, the vulnerable behavior predates this changeset and we must inspect earlier commits to find when it was first written.",
+              "evidence": "Diff shows no semantic change to guard(): it still returns filename.replace(\":\", \"_\"); the same code is visible in the parent file excerpt.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+            "message": "Applied patch from Aleksi Kallio for AMQ-1075 to add a file server for out of band BlobMessage suppo",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": true,
+              "should_continue_tracking": false,
+              "confidence": 0.58,
+              "reasoning": "This commit creates FilenameGuardFilter from scratch and introduces the guard(String) method that performs only a trivial replacement on the supplied filename. Because the file does not exist in the parent commit, the vulnerable guarding logic originates here, making this the first time the flawed filename handling—later refined but still insufficient—was hand-written.",
+              "evidence": "New file added with guard implementation: `String guarded = filename.replace(\":\", \"_\");` (lines 36-42). There is no prior version of this file in the parent commit."
+            }
+          }
+        ],
+        "llm_calls": 6,
+        "validation_calls": 1
+      }
+    },
+    {
+      "cve": "CVE-2012-6092",
+      "cwe": "CWE-79",
+      "expected_vic": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+      "found_vic": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+      "is_correct": true,
+      "llm_calls": 17,
+      "validation_calls": 1,
+      "tracked_commits": 11,
+      "details": {
+        "introduction_commit": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+        "fix_commit": "51eb87a84be88d28383ea48f6e341ffe1203c5ba",
+        "file_path": "activemq-web/src/main/java/org/apache/activemq/web/PortfolioPublishServlet.java",
+        "vulnerable_line": "out.println(\"<body>Published <b>\" + count + \"</b> of \" + total + \" price messages.  Refresh = \" + refreshRate + \"s\");",
+        "tracked_commits": [
+          {
+            "hash": "b0c2a40fb979829ceca2ca51858ca67269bd5992",
+            "message": "Removing svn keywords, they don't have much value and just add additional noise when diffing source ",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.33,
+              "reasoning": "This commit only strips the obsolete SVN keyword from the class-level javadoc and does not touch the servlet logic that prints the unescaped request-derived data. Therefore the vulnerable line must have been written in an earlier commit.",
+              "evidence": "Diff shows only removal of the '@version $Revision: 1.1.1.1 $' line; the vulnerable statement 'out.println(\"<body>Published <b>\" + count + ...)' remains unchanged.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "540dd5c987855fc6b0981ece021358645ae07827",
+            "message": "Last set of checkstyle violation fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.5,
+              "reasoning": "This checkstyle cleanup only reformats existing code and renames constants. The vulnerable println line already existed in the parent revision, so this commit is not where the XSS pattern was first authored. Earlier history must be inspected.",
+              "evidence": "Diff shows the line `out.println(\"<body>Published <b>\" + count + \"</b> of \" + total + \" price messages.  Refresh = \" + refreshRate + \"s\");` changed only by spacing, indicating the code pre-existed prior to commit 540dd5c987.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "5f1adbe898c2730f15f27d6806d74655505e52ae",
+            "message": "More checkstyle fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@564977 13f79535-4",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.18,
+              "reasoning": "The vulnerability-related line already existed before this checkstyle-only commit. The diff only adjusts license formatting and does not introduce the HTML output that causes the XSS, so the vulnerable code predates this change.",
+              "evidence": "Parent commit already contains the vulnerable PrintWriter output line (`out.println(\"<body>Published...`) visible in unchanged portions of the file; the current diff only modifies license comment indentation.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "702b13be278f0f1ad52ea7c7f95e750a0b9bfad8",
+            "message": "apply patch http://issues.apache.org/activemq/browse/AMQ-1293\n\ngit-svn-id: https://svn.apache.org/re",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.42,
+              "reasoning": "This commit only replaces explicit constructor calls with Integer.valueOf; it does not modify the vulnerable response-printing line, which already existed beforehand. Therefore the vulnerable code must predate this revision.",
+              "evidence": "Diff shows changes limited to: total=new Integer(...) -> Integer.valueOf(...); no additions or removals around the vulnerable out.println(...) line.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "57b494132549ebef6877bf47da3c3d5d776286e0",
+            "message": "Applied new source header boiler plate per http://www.apache.org/legal/src-headers.html\n\ngit-svn-id:",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.69,
+              "reasoning": "The commit only updates the source header boilerplate; the vulnerable println output already exists unchanged in the parent revision, so this cannot be the first introduction of the XSS-prone code.",
+              "evidence": "Diff shows only comment/license changes; vulnerability line `out.println(\"<body>Published <b>\" + count + ...` is present in the parent content.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "c1a1dd268983802b24f9fb7a383a90828bce7a10",
+            "message": "minor refactor to make the WebClient easier to use as a stand alone POJO\n\ngit-svn-id: https://svn.ap",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.33,
+              "reasoning": "该提交仅将 WebClient 的获取方式从实例方法改为静态方法调用，与 XSS 漏洞相关的 out.println 输出语句没有变化或新增，因此无法构成漏洞引入点。",
+              "evidence": "diff 中唯一的变更是 `WebClient client = getWebClient(request);` → `WebClient client = WebClient.getWebClient(request);`，与漏洞输出行无关。",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "48b4869472d647a890ce6905e7914b7d1ecde948",
+            "message": "Updated copyright headers to be (c) 2005-2006 \n\n\ngit-svn-id: https://svn.apache.org/repos/asf/incuba",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.22,
+              "reasoning": "This commit only updates copyright header text and does not touch the servlet logic or the vulnerable output line. Therefore it is unrelated to the XSS issue, and earlier commits must be inspected.",
+              "evidence": "Diff shows only a change from 'Copyright 2004' to 'Copyright 2005-2006', with no modifications to the PrintWriter/output code.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "f1a084efeb76563f5950783efc69b9e507e7069b",
+            "message": "refactoring to org.apache.activemq package names.\n\ngit-svn-id: https://svn.apache.org/repos/asf/incu",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.39,
+              "reasoning": "该提交中新建了 PortfolioPublishServlet.java 并包含漏洞代码行，但提交消息显示是一次包名重构（refactoring to org.apache.activemq package names），很可能是从旧路径/包名迁移过来的代码而非首次编写。为了找到真正首次手工编写漏洞代码的提交，需要继续追踪更早的历史。",
+              "evidence": "diff 中整文件新增（new file），同时提交信息指示为 refactoring，说明可能是从旧包迁移，不能确认此处为首次引入。",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "92a698fe42656274d0f3e31be415ba881b094b3f",
+            "message": "updated headers in source file to use apache header\n\ngit-svn-id: https://svn.apache.org/repos/asf/in",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.21,
+              "reasoning": "The commit message indicates only header updates and provides no evidence that the vulnerable println statement was first authored here. Earlier commits (#10 and #11) still exist in the file history, so the vulnerable code could have been introduced before this point. Continue tracing further back.",
+              "evidence": "Commit 92a698fe4265: message says “updated headers in source file to use apache header,” suggesting non-functional edits. No diff lines involving the vulnerable println statement are shown.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "b6b7cce6ae6a9f0219bfd219d097535b27aa3710",
+            "message": "Issue: source is not compiled. The generated jar file is empty.\nSolution: Restructured the source to",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.29,
+              "reasoning": "This commit appears to be a restructuring that introduces the file in the new layout, but the project history still has an older commit (40a7d3b6ac) to inspect. Given the restructuring context, the vulnerable code could have been authored earlier under a different path. Need to trace further back to confirm the true origin.",
+              "evidence": "Commit message: “Restructured the source to src/main/java.” Parent shows file absence, implying relocation rather than new logic.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+            "message": "Moved the trunk code into the trunk sub directory\n\ngit-svn-id: https://svn.apache.org/repos/asf/incu",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": false,
+              "confidence": 0.31,
+              "reasoning": "该提交是一次大规模代码迁移（commit message 为 “Moved the trunk code into the trunk sub directory”，diff 中新增上千文件），PortfolioPublishServlet 只是被整体拷贝进新位置，其中包含的易受 XSS 的 out.println 语句显然早已存在于更早的代码库中，并非此次提交首次手工编写。因此真正的漏洞引入点还在更早的历史（本仓库可追踪范围之外）。",
+              "evidence": "activemq-web/src/java/org/activemq/web/PortfolioPublishServlet.java 在此提交中新建，但整个提交是一次目录搬迁，非针对性开发；提交信息与大规模新增文件表明这是历史代码的迁移，而非首次实现。",
+              "next_action": "stop"
+            },
+            "is_boundary": true,
+            "note": "文件历史边界，可能是迁移/导入"
+          }
+        ],
+        "llm_calls": 17,
+        "validation_calls": 1
+      }
+    },
+    {
+      "cve": "CVE-2013-1880",
+      "cwe": "CWE-79",
+      "expected_vic": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+      "found_vic": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+      "is_correct": true,
+      "llm_calls": 29,
+      "validation_calls": 1,
+      "tracked_commits": 12,
+      "details": {
+        "introduction_commit": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+        "fix_commit": "fafd12dfd4f71336f8e32c090d40ed1445959b40",
+        "file_path": "activemq-web/src/main/java/org/apache/activemq/web/PortfolioPublishServlet.java",
+        "vulnerable_line": "out.print(refreshRate);",
+        "tracked_commits": [
+          {
+            "hash": "51eb87a84be88d28383ea48f6e341ffe1203c5ba",
+            "message": "https://issues.apache.org/jira/browse/AMQ-4115 - xss in web demos\n\ngit-svn-id: https://svn.apache.or",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.21,
+              "reasoning": "The commit adds escaping for count, total, and refreshRate but the vulnerable usage `out.print(refreshRate);` already existed in the parent revision, meaning the unsafe code predates this commit. Therefore, this change is a modification of existing vulnerable code rather than the initial introduction.",
+              "evidence": "Diff shows the existing line `out.print(refreshRate);` unchanged, and only additional escaping logic was introduced afterwards.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "b0c2a40fb979829ceca2ca51858ca67269bd5992",
+            "message": "Removing svn keywords, they don't have much value and just add additional noise when diffing source ",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.42,
+              "reasoning": "This commit only removes the SVN keyword from the class header comment and does not add or modify the vulnerable out.print(refreshRate) code, which already exists in the parent revision. Therefore, the vulnerability predates this change and we must keep tracing earlier commits.",
+              "evidence": "Diff shows only removal of the '@version' line; the vulnerable code block (including out.print(refreshRate)) is already present in the parent commit with no changes in this revision.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "540dd5c987855fc6b0981ece021358645ae07827",
+            "message": "Last set of checkstyle violation fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.3,
+              "reasoning": "The diff in this checkstyle-focused commit only renames constants, adjusts generics, and reformats code; the vulnerable statement out.print(refreshRate); already exists and is merely retained. Since the line predates this commit and there was no first-time introduction of the vulnerable logic here, we must look further back.",
+              "evidence": "The diff shows the existing block with out.print(refreshRate); unchanged while other style-only edits occur (e.g., renaming maxDeltaPercent to MAX_DELTA_PERCENT).",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "5f1adbe898c2730f15f27d6806d74655505e52ae",
+            "message": "More checkstyle fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@564977 13f79535-4",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.1,
+              "reasoning": "The diff in this commit only adjusts license/comment formatting and does not touch the vulnerable code (out.print(refreshRate)). Since the vulnerable logic already exists unchanged in the parent, this commit cannot be the introduction point.",
+              "evidence": "Diff shows only whitespace/formatting changes at the top of the file; the vulnerable snippet in doGet remains identical before and after.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "702b13be278f0f1ad52ea7c7f95e750a0b9bfad8",
+            "message": "apply patch http://issues.apache.org/activemq/browse/AMQ-1293\n\ngit-svn-id: https://svn.apache.org/re",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.37,
+              "reasoning": "The vulnerable statement `out.print(refreshRate);` already existed in the parent commit; this revision only replaces `new Integer(...)` with `Integer.valueOf(...)`, so it is not where the XSS vulnerability was first written.",
+              "evidence": "Parent content (before this commit) already contains the vulnerable block: `out.print(\"<html><head><meta http-equiv='refresh' content='\"); ... out.print(refreshRate);`.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "57b494132549ebef6877bf47da3c3d5d776286e0",
+            "message": "Applied new source header boiler plate per http://www.apache.org/legal/src-headers.html\n\ngit-svn-id:",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.41,
+              "reasoning": "The vulnerable statement `out.print(refreshRate);` already existed in the parent revision; this commit only updates the Apache license header and does not introduce new servlet logic. Because the vulnerable code predates this change, we must inspect earlier commits to find where it was first written.",
+              "evidence": "Diff shows only header/license text changes (`@@ -1,10 +1,11 @@ ...`). The servlet body containing `out.print(\"<html><head>...` and `out.print(refreshRate);` was already present in the parent commit (lines 67-73).",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "c1a1dd268983802b24f9fb7a383a90828bce7a10",
+            "message": "minor refactor to make the WebClient easier to use as a stand alone POJO\n\ngit-svn-id: https://svn.ap",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.58,
+              "reasoning": "This commit only refactors the WebClient retrieval call. The vulnerable line `out.print(refreshRate);` already exists unchanged in the parent revision, so the vulnerability must have been introduced earlier.",
+              "evidence": "Parent content shows `out.print(\"<html>...` and `String refreshRate = request.getParameter(\"refresh\"); ... out.print(refreshRate);` prior to this commit, indicating the code predates the current diff.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "48b4869472d647a890ce6905e7914b7d1ecde948",
+            "message": "Updated copyright headers to be (c) 2005-2006 \n\n\ngit-svn-id: https://svn.apache.org/repos/asf/incuba",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.31,
+              "reasoning": "The commit only updates the copyright header and does not modify the vulnerable out.print(refreshRate) logic, which already exists in the parent revision. Therefore this cannot be the first introduction of the vulnerability and earlier commits must be checked.",
+              "evidence": "Parent file content already contains the vulnerable code block with out.print(refreshRate); and the diff in this commit shows only a copyright header change.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "f1a084efeb76563f5950783efc69b9e507e7069b",
+            "message": "refactoring to org.apache.activemq package names.\n\ngit-svn-id: https://svn.apache.org/repos/asf/incu",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.37,
+              "reasoning": "This commit adds the PortfolioPublishServlet file containing the vulnerable out.print(refreshRate) line, but the change is part of a broader package refactoring (“refactoring to org.apache.activemq package names”). The servlet may have existed earlier under a different package or location, so this might just be a move/rename rather than the first creation of the vulnerable logic.",
+              "evidence": "The diff shows the file added entirely with the vulnerable out.print(refreshRate) call, and the commit message indicates a refactoring to new package names, suggesting the code likely existed before.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "92a698fe42656274d0f3e31be415ba881b094b3f",
+            "message": "updated headers in source file to use apache header\n\ngit-svn-id: https://svn.apache.org/repos/asf/in",
+            "analysis": {
+              "is_vulnerability_related": false,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.29,
+              "reasoning": "This commit is described as an Apache license/header update and the diff is unavailable. Although the parent shows no file, the lack of actual code context makes it impossible to confirm whether the vulnerable out.print(refreshRate) logic first appeared here. To avoid incorrect attribution we should continue tracking earlier commits until we find clear evidence of the first manual introduction of the vulnerable code.",
+              "evidence": "Commit message indicates only header updates; no actual code diff is provided to confirm presence of out.print(refreshRate).",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "b6b7cce6ae6a9f0219bfd219d097535b27aa3710",
+            "message": "Issue: source is not compiled. The generated jar file is empty.\nSolution: Restructured the source to",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.35,
+              "reasoning": "This commit restructures the source tree to src/main/java and the diff for this file is unavailable, with the parent lacking the file. Given the restructuring context, the file was likely moved rather than created from scratch, so the vulnerability may have been introduced earlier. We should inspect the next earlier commit to confirm the true origin.",
+              "evidence": "Commit message indicates a project-wide restructuring: “Restructured the source to src/main/java,” suggesting file movement rather than new code.",
+              "next_action": "continue"
+            }
+          },
+          {
+            "hash": "40a7d3b6ac35d2ecb34e85fc3403d2e48e33874e",
+            "message": "Moved the trunk code into the trunk sub directory\n\ngit-svn-id: https://svn.apache.org/repos/asf/incu",
+            "analysis": {
+              "is_vulnerability_related": true,
+              "is_introduction_point": false,
+              "should_continue_tracking": true,
+              "confidence": 0.26,
+              "reasoning": "This commit adds the entire activemq-web module (including PortfolioPublishServlet) as part of a bulk move/import (“Moved the trunk code into the trunk sub directory”). The vulnerable statement `out.print(refreshRate);` first appears in this import, but the commit clearly reflects a relocation of pre-existing source rather than the first time that code was authored. Therefore the true vulnerability-introducing change must predate this move, and we should keep tracing to older history (even though it lies outside the current log).",
+              "evidence": "Commit fafd12dfd4f7 fixes XSS in PortfolioPublishServlet. In 40a7d3b6ac the entire file `activemq-web/src/java/org/activemq/web/PortfolioPublishServlet.java` is added wholesale during a trunk move, bringing in the `out.print(refreshRate);` line along with the rest of the legacy code.",
+              "next_action": "continue"
+            },
+            "is_boundary": true,
+            "note": "文件历史边界，可能是迁移/导入"
+          }
+        ],
+        "llm_calls": 29,
+        "validation_calls": 1
+      }
+    },
+    {
+      "cve": "CVE-2014-3576",
+      "error": "Responses API 请求失败: 429 Client Error: Too Many Requests for url: https://yunwu.ai/v1/responses",
+      "is_correct": false
+    }
+  ]
+}

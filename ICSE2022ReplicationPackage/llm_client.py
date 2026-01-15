@@ -28,7 +28,7 @@ class BaseLLMClient(ABC):
 
 
 class OpenAIClient(BaseLLMClient):
-    """OpenAI API 客户端"""
+    """OpenAI API 客户端（Chat Completions API）"""
     
     def __init__(self, api_key: str = None, model: str = "gpt-4", 
                  base_url: str = None):
@@ -50,6 +50,7 @@ class OpenAIClient(BaseLLMClient):
             raise ValueError("未配置 OPENAI_API_KEY")
         
         self.model = model
+        self.base_url = base_url
         
         if base_url:
             self.client = OpenAI(api_key=self.api_key, base_url=base_url)
@@ -66,18 +67,104 @@ class OpenAIClient(BaseLLMClient):
             temperature: 温度参数
             response_format: 响应格式 ("json" 或 "text")
         """
+        # 检查是否是 codex 模型，需要使用 Responses API
+        if "codex" in self.model.lower():
+            return self._chat_responses_api(messages, temperature, response_format)
+        
         kwargs = {
             "model": self.model,
             "messages": messages,
             "temperature": temperature,
+            "timeout": 120,  # 添加超时设置
         }
         
-        # GPT-4等模型支持json_object格式
+        # GPT 模型支持 json_object 格式
         if response_format == "json" and "gpt" in self.model.lower():
             kwargs["response_format"] = {"type": "json_object"}
         
-        response = self.client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content
+        try:
+            response = self.client.chat.completions.create(**kwargs)
+            return response.choices[0].message.content
+        except Exception as e:
+            # 如果 response_format 不支持，重试不带该参数
+            if "response_format" in kwargs and "response_format" in str(e).lower():
+                del kwargs["response_format"]
+                response = self.client.chat.completions.create(**kwargs)
+                return response.choices[0].message.content
+            raise
+    
+    def _chat_responses_api(self, messages: list, temperature: float = 0.1,
+                            response_format: str = "json") -> str:
+        """
+        使用 Responses API 发送请求（用于 codex 模型）
+        
+        Responses API 端点: POST /v1/responses
+        """
+        import requests
+        
+        # 构建请求
+        url = self.base_url.rstrip('/') + '/responses' if self.base_url else 'https://api.openai.com/v1/responses'
+        
+        # 从 messages 提取 system 和 user 内容
+        instructions = None
+        input_content = []
+        
+        for msg in messages:
+            role = msg.get('role', '')
+            content = msg.get('content', '')
+            
+            if role == 'system':
+                instructions = content
+            elif role in ('user', 'assistant'):
+                input_content.append({
+                    "role": role,
+                    "content": content
+                })
+        
+        # 如果只有一条用户消息，可以简化为字符串
+        if len(input_content) == 1 and input_content[0]['role'] == 'user':
+            input_data = input_content[0]['content']
+        else:
+            input_data = input_content
+        
+        payload = {
+            "model": self.model,
+            "input": input_data,
+            "temperature": temperature,
+        }
+        
+        if instructions:
+            payload["instructions"] = instructions
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=120)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # 从 Responses API 格式中提取文本
+            # output 是一个数组，找到 type="message" 的项
+            output = data.get('output', [])
+            for item in output:
+                if item.get('type') == 'message':
+                    content = item.get('content', [])
+                    for c in content:
+                        if c.get('type') == 'output_text':
+                            return c.get('text', '')
+            
+            # 尝试 output_text 快捷方式
+            if 'output_text' in data:
+                return data['output_text']
+            
+            return str(data)
+            
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Responses API 请求失败: {e}")
     
     def get_model_name(self) -> str:
         return self.model

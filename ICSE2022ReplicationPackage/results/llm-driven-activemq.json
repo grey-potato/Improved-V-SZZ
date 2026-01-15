@@ -1,0 +1,88 @@
+{
+  "introduction_commit": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+  "fix_commit": "729c4731574ffffaf58ebefdbaeb3bd19ed1c7b7",
+  "file_path": "activemq-fileserver/src/main/java/org/apache/activemq/util/FilenameGuardFilter.java",
+  "vulnerable_line": "String guarded = filename.replace(\":\", \"_\").replace(\"\\\\\", \"\").replace(\"/\", \"\");",
+  "tracked_commits": [
+    {
+      "hash": "9fd5cb7dfe0fcc431f99d5e14206e0090e72f36b",
+      "message": "https://issues.apache.org/jira/browse/AMQ-5754 - disable file server by default",
+      "analysis": {
+        "is_vulnerability_related": true,
+        "is_introduction_point": false,
+        "should_continue_tracking": true,
+        "confidence": 0.35,
+        "reasoning": "The commit modifies the existing guard() logic by adding further replace() calls. Since the vulnerable line already existed in the parent commit (only replacing ':'), this commit is part of the fix, not where the vulnerable code was first introduced. Therefore, we must inspect earlier commits to find when the original guard() implementation was written.",
+        "evidence": "Diff shows existing line `String guarded = filename.replace(\":\", \"_\");` being changed to include additional replace calls, indicating the vulnerable logic predated this commit.",
+        "next_action": "continue"
+      }
+    },
+    {
+      "hash": "8bf987b134bd827b93ed8157b323bc3bd2d8a82e",
+      "message": "https://issues.apache.org/jira/browse/AMQ-3177 - use slf4j instead of jcl\n\ngit-svn-id: https://svn.a",
+      "analysis": {
+        "is_vulnerability_related": true,
+        "is_introduction_point": false,
+        "should_continue_tracking": true,
+        "confidence": 0.33,
+        "reasoning": "当前提交仅将日志实现从 commons-logging 更换为 slf4j，并未新增或首次编写与路径过滤逻辑相关的代码。父提交里已存在 guard 函数及相关替换逻辑，因此漏洞代码显然在更早提交中已经出现，需要继续追踪。",
+        "evidence": "diff 仅涉及 Log -> Logger 的替换，GuardedHttpServletRequest.guard 方法在父提交中已经包含相同的 replace 逻辑（例如 replace(\":\", \"_\")）。",
+        "next_action": "continue"
+      }
+    },
+    {
+      "hash": "47b09a2a8995280fdda93f5c106abd2189617113",
+      "message": "https://issues.apache.org/activemq/browse/AMQ-2600 - jetty 7 - fileserver app fixed\n\ngit-svn-id: htt",
+      "analysis": {
+        "is_vulnerability_related": true,
+        "is_introduction_point": false,
+        "should_continue_tracking": true,
+        "confidence": 0.36,
+        "reasoning": "The commit only switches logging from Jetty’s Log to Apache Commons Logging but keeps the vulnerable guard logic (`filename.replace(\":\", \"_\")`) unchanged, so the vulnerable behavior predates this commit.",
+        "evidence": "Diff shows only logging-related changes around the guard method, while the vulnerable statement exists in the parent commit.",
+        "next_action": "continue"
+      }
+    },
+    {
+      "hash": "e8a06c43bbe640569b7f2d641ccb934908112d2b",
+      "message": "https://issues.apache.org/activemq/browse/AMQ-2600 - jetty 7 initial commit - web console working, n",
+      "analysis": {
+        "is_vulnerability_related": false,
+        "is_introduction_point": false,
+        "should_continue_tracking": true,
+        "confidence": 0.54,
+        "reasoning": "This commit only updates the logging import (switching from org.mortbay.log.Log to org.eclipse.jetty.util.log.Log). No changes were made to the guard method or the replace-based sanitization logic, so it is unrelated to the vulnerability and clearly not the first introduction of the flawed code.",
+        "evidence": "Diff shows only a single-line import change and no modifications to the guard method implementing filename.replace(\"...\"), which already existed beforehand.",
+        "next_action": "continue"
+      }
+    },
+    {
+      "hash": "540dd5c987855fc6b0981ece021358645ae07827",
+      "message": "Last set of checkstyle violation fixes\n\ngit-svn-id: https://svn.apache.org/repos/asf/activemq/trunk@",
+      "analysis": {
+        "is_vulnerability_related": true,
+        "is_introduction_point": false,
+        "should_continue_tracking": true,
+        "confidence": 0.42,
+        "reasoning": "The commit only adjusts formatting and adds license headers; the vulnerable guard code (replacing ':' only) already existed in the parent revision. Since the logic was not newly written here, we must look further back for the true introduction.",
+        "evidence": "The parent file already contains the same guard method with `filename.replace(\":\", \"_\")`, so this commit merely reformats existing code.",
+        "next_action": "continue"
+      }
+    },
+    {
+      "hash": "e6d20f3932b556377218ac2e353a2cc99d26d1ea",
+      "message": "Applied patch from Aleksi Kallio for AMQ-1075 to add a file server for out of band BlobMessage suppo",
+      "analysis": {
+        "is_vulnerability_related": true,
+        "is_introduction_point": true,
+        "should_continue_tracking": false,
+        "confidence": 0.61,
+        "reasoning": "该提交中新建了 FilenameGuardFilter，并首次引入了 guard(String) 方法，其核心逻辑是对传入的文件名仅做简单的字符串替換（只替换冒号），从而为后续路径遍历漏洞埋下隐患。父提交中不存在该文件和相关逻辑，因此这里就是漏洞防护逻辑首次被手工编写的地方，也就是漏洞代码的真正引入点。",
+        "evidence": "在 GuardedHttpServletRequest.guard 中新增代码：`String guarded = filename.replace(\":\", \"_\");`，父提交中没有该文件或逻辑。",
+        "next_action": "stop"
+      }
+    }
+  ],
+  "llm_calls": 6,
+  "validation_calls": 1
+}
